@@ -117,3 +117,28 @@ The output of the command will look like this.
  15365 System.Int32
  14578 System.Collections.Hashtable+Bucket[]
 ```
+
+### Object Statistics
+
+You can view the object types that are taking up the most memory by using `Get-ClrObject` with the `-Statistics` parameters. 
+
+```powershell
+$Process | Mount-ClrRuntime | Get-ClrObject -Statistics | Select -First 10
+```
+
+This will output `TypeStat` objects like this. 
+
+```powershell
+Type                                                        Count      Size
+----                                                        -----      ----
+System.String                                              677750 144727842
+Free                                                        71092  21352728
+System.Byte[]                                               25867  16949362
+System.Collections.Hashtable+Bucket[]                       92853  16820640
+System.Management.Automation.PSNoteProperty                232072  11139456
+System.Object[]                                            172782   9788456
+System.Management.Automation.Language.InternalScriptExtent 286452   9166464
+System.Collections.DictionaryEntry                         267620   8563840
+System.Management.Automation.PSObject                       65367   8366976
+System.Collections.Hashtable                                92739   6677208
+```
