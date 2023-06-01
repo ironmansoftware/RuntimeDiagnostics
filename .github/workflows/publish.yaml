@@ -18,6 +18,7 @@ jobs:
       run: dotnet publish -c Release
 
     - name: publish
+      shell: pwsh
       run: | 
         Install-Module -Name PowerShellGet -AllowPrerelease -Force -Scope CurrentUser -SkipPublisherCheck
         Publish-PSResource -Path .\bin\Release\net7.0\publish\RuntimeDiagnostics.psd1 -ApiKey ${{ secrets.APIKEY }}
