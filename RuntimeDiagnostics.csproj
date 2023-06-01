@@ -11,4 +11,8 @@
     <PackageReference Include="PowerShellStandard.Library" Version="5.1.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="RuntimeDiagnostics.psd1" CopyToPublishDirectory="Always" />
+  </ItemGroup>
+
 </Project>
