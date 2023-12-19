@@ -46,7 +46,22 @@ namespace RuntimeDiagnostics
                 if (field.Name == null) return;
                 if (Properties.Any(m => m.Name == field.Name)) return;
 
-                if (field.IsValueType)
+                if (field.Type?.Name == "System.String")
+                {
+                    var value = baseObject.ReadStringField(field.Name);
+                    Properties.Add(new PSNoteProperty(field.Name, value));
+                }
+                else if (field.Type?.Name == "System.Int32")
+                {
+                    var value = baseObject.ReadField<int>(field.Name);
+                    Properties.Add(new PSNoteProperty(field.Name, value));
+                }
+                else if (field.Type?.Name == "System.Boolean")
+                {
+                    var value = baseObject.ReadField<bool>(field.Name);
+                    Properties.Add(new PSNoteProperty(field.Name, value));
+                }
+                else if (field.IsValueType)
                 {
                     var value = baseObject.ReadValueTypeField(field.Name);
                     Properties.Add(new PSNoteProperty(field.Name, new Lazy<ExtendedClrObject>(() => new ExtendedClrObject(value))));
