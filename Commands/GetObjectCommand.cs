@@ -11,15 +11,15 @@ public class GetObjectCommand : PSCmdlet
     [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true)]
     public ClrRuntime Runtime { get; set; }
 
-    [Parameter(ParameterSetName = "Object")]
+    [Parameter()]
     public ulong MinSize { get; set; }
 
-    [Parameter(ParameterSetName = "Object")]
+    [Parameter()]
     public int Largest { get; set; }
-    [Parameter(ParameterSetName = "Statistics")]
+    [Parameter()]
     public SwitchParameter Statistics { get; set; }
 
-    [Parameter(ParameterSetName = "Object")]
+    [Parameter()]
     public string Type { get; set; }
 
     [Parameter]
@@ -29,46 +29,46 @@ public class GetObjectCommand : PSCmdlet
     {
         var objects = Runtime.Heap.EnumerateObjects();
 
-
-
-        if (ParameterSetName == "Statistics")
+        if (MyInvocation.BoundParameters.ContainsKey("Type"))
         {
-            objects.Where(m => m.Type != null).GroupBy(m => m.Type.Name).Select(g => new TypeStat
+            objects = objects.Where(o => o.Type?.Name?.Equals(Type, StringComparison.OrdinalIgnoreCase) == true);
+        }
+
+        if (Fields)
+        {
+            foreach (var obj in objects)
             {
-                Type = g.Key,
-                Count = g.Count(),
-                Size = (ulong)g.Sum(m => (long)m.Size)
-            }).OrderByDescending(t => t.Size).ToList().ForEach(t => WriteObject(t));
+                var psobject = new ExtendedClrObject(obj);
+                WriteObject(psobject);
+            }
         }
         else
         {
-            if (MyInvocation.BoundParameters.ContainsKey("Type"))
+            if (MyInvocation.BoundParameters.ContainsKey("MinSize"))
             {
-                objects = objects.Where(o => o.Type?.Name?.Equals(Type, StringComparison.OrdinalIgnoreCase) == true);
+                objects = objects.Where(o => o.Size >= MinSize);
             }
 
-            if (Fields)
+            if (MyInvocation.BoundParameters.ContainsKey("Largest"))
             {
-                foreach (var obj in objects)
+                objects = objects.OrderByDescending(o => o.Size).Take(Largest);
+            }
+
+            if (Statistics)
+            {
+                objects.Where(m => m.Type != null).GroupBy(m => m.Type.Name).Select(g => new TypeStat
                 {
-                    var psobject = new ExtendedClrObject(obj);
-                    WriteObject(psobject);
-                }
+                    Type = g.Key,
+                    Count = g.Count(),
+                    Size = (ulong)g.Sum(m => (long)m.Size)
+                }).OrderByDescending(t => t.Size).ToList().ForEach(t => WriteObject(t));
             }
             else
             {
-                if (MyInvocation.BoundParameters.ContainsKey("MinSize"))
-                {
-                    objects = objects.Where(o => o.Size >= MinSize);
-                }
-
-                if (MyInvocation.BoundParameters.ContainsKey("Largest"))
-                {
-                    objects = objects.OrderByDescending(o => o.Size).Take(Largest);
-                }
-
                 WriteObject(objects, true);
             }
         }
+
+
     }
 }
