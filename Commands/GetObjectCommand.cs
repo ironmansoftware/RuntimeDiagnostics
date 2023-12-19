@@ -1,5 +1,7 @@
+using System.Diagnostics;
 using System.Management.Automation;
 using Microsoft.Diagnostics.Runtime;
+using RuntimeDiagnostics;
 
 namespace ProcessDiagnostics;
 
@@ -15,9 +17,20 @@ public class GetObjectCommand : PSCmdlet
     [Parameter]
     public int Largest { get; set; }
 
+    [Parameter]
+    public string Type { get; set; }
+
+    [Parameter]
+    public SwitchParameter Fields { get; set; }
+
     protected override void ProcessRecord()
     {
         var objects = Runtime.Heap.EnumerateObjects();
+
+        if (MyInvocation.BoundParameters.ContainsKey("Type"))
+        {
+            objects = objects.Where(o => o.Type?.Name?.Equals(Type, StringComparison.OrdinalIgnoreCase) == true);
+        }
 
         if (MyInvocation.BoundParameters.ContainsKey("MinSize"))
         {
@@ -29,6 +42,17 @@ public class GetObjectCommand : PSCmdlet
             objects = objects.OrderByDescending(o => o.Size).Take(Largest);
         }
 
-        WriteObject(objects, true);
+        if (Fields)
+        {
+            foreach (var obj in objects)
+            {
+                var psobject = new ExtendedClrObject(obj);
+                WriteObject(psobject);
+            }
+        }
+        else
+        {
+            WriteObject(objects, true);
+        }
     }
 }
